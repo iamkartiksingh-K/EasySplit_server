@@ -23,7 +23,7 @@ mongoose
 	.connect(process.env.DBURI)
 	.then(() => {
 		console.log("Database connected");
-		app.listen(5000, () => {
+		app.listen(process.env.PORT, () => {
 			console.log("server is live : http://localhost:5000");
 		});
 	})
