@@ -32,7 +32,16 @@ router.post("/register", async (req, res) => {
 		});
 
 		await user.save();
-
+		const token = jwt.sign(
+			{ id: user._id, username: user.username },
+			process.env.ACCESS_TOKEN_SECRET,
+			{
+				expiresIn: "1h",
+			}
+		);
+		res.cookie("token", token, {
+			httpOnly: true,
+		});
 		return res
 			.status(200)
 			.json({ message: "User registered Successfully" });
@@ -59,10 +68,10 @@ router.post("/login", async (req, res) => {
 		}
 		const passwordMatch = await bcrypt.compare(password, user.password);
 		if (!passwordMatch) {
-			return res.status(400).json({ error: "authentication failed" });
+			return res.status(400).json({ error: "Wrong Password" });
 		}
 		const token = jwt.sign(
-			{ id: user._id },
+			{ id: user._id, username: user.username },
 			process.env.ACCESS_TOKEN_SECRET,
 			{
 				expiresIn: "1h",
@@ -71,7 +80,7 @@ router.post("/login", async (req, res) => {
 		res.cookie("token", token, {
 			httpOnly: true,
 		});
-		res.json({ msg: "Login Successful" });
+		res.json({ msg: "Login Successful", _id: user._id });
 	} catch (err) {
 		res.status(500).json({ error: "Login failed" });
 	}
