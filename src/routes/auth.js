@@ -36,11 +36,12 @@ router.post("/register", async (req, res) => {
 			{ id: user._id, username: user.username },
 			process.env.ACCESS_TOKEN_SECRET,
 			{
-				expiresIn: "1h",
+				expiresIn: "3h",
 			}
 		);
 		res.cookie("token", token, {
 			httpOnly: true,
+			sameSite: 'None'
 		});
 		return res
 			.status(200)
@@ -74,11 +75,12 @@ router.post("/login", async (req, res) => {
 			{ id: user._id, username: user.username },
 			process.env.ACCESS_TOKEN_SECRET,
 			{
-				expiresIn: "1h",
+				expiresIn: "3h",
 			}
 		);
 		res.cookie("token", token, {
 			httpOnly: true,
+			sameSite: 'None'
 		});
 		res.json({ msg: "Login Successful", _id: user._id });
 	} catch (err) {
