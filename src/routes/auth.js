@@ -40,8 +40,9 @@ router.post("/register", async (req, res) => {
 			}
 		);
 		res.cookie("token", token, {
-			httpOnly: true,
-			sameSite: 'None'
+			sameSite: 'None',
+			secure: true,
+			httpOnly: true 
 		});
 		return res
 			.status(200)
@@ -79,8 +80,9 @@ router.post("/login", async (req, res) => {
 			}
 		);
 		res.cookie("token", token, {
-			httpOnly: true,
-			sameSite: 'None'
+			sameSite: 'None',
+			secure: true,
+			httpOnly: true 
 		});
 		res.json({ msg: "Login Successful", _id: user._id });
 	} catch (err) {
