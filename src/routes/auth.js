@@ -36,10 +36,12 @@ router.post("/register", async (req, res) => {
 			{ id: user._id, username: user.username },
 			process.env.ACCESS_TOKEN_SECRET,
 			{
-				expiresIn: "1h",
+				expiresIn: "3h",
 			}
 		);
 		res.cookie("token", token, {
+			sameSite: "None",
+			secure: true,
 			httpOnly: true,
 		});
 		return res
@@ -74,10 +76,12 @@ router.post("/login", async (req, res) => {
 			{ id: user._id, username: user.username },
 			process.env.ACCESS_TOKEN_SECRET,
 			{
-				expiresIn: "1h",
+				expiresIn: "3h",
 			}
 		);
 		res.cookie("token", token, {
+			sameSite: "None",
+			secure: true,
 			httpOnly: true,
 		});
 		res.json({ msg: "Login Successful", _id: user._id });
@@ -88,7 +92,11 @@ router.post("/login", async (req, res) => {
 // route to logout
 router.post("/logout", async (req, res) => {
 	try {
-		res.clearCookie("token");
+		res.cookie("token", "1", {
+			sameSite: "None",
+			secure: true,
+			httpOnly: true,
+		});
 		res.status(200).json({ msg: "logout successful" });
 	} catch (err) {
 		res.status(200).json({ msg: "No token present" });

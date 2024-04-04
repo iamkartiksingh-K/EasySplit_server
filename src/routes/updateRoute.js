@@ -20,8 +20,6 @@ router.get("/", verifyToken, (req, res) => {
 	const expenseChangeStream = database.collection("expenses").watch();
 
 	groupChangeStream.on("change", (change) => {
-		console.log(change.fullDocument.members.includes(userId));
-		console.log(userId);
 		const isUserInMembers = change.fullDocument.members.some((memberId) =>
 			memberId.equals(userId)
 		);

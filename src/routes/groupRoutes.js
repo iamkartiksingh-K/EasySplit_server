@@ -20,19 +20,12 @@ router.post("/", verifyToken, async (req, res) => {
 		balances,
 		cover,
 	});
-
-	Group.findOne({ name })
-		.then((result) => {
-			if (result) {
-				res.json({ error: "Group already Exists" });
-			} else {
-				newGroup.save();
-				res.json({ message: "Group added", data: newGroup });
-			}
-		})
-		.catch((err) => {
-			res.status(400).json({ error: err });
-		});
+	try {
+		newGroup.save();
+		res.json({ message: "Group added", data: newGroup });
+	} catch (err) {
+		res.status(400).json({ error: err });
+	}
 });
 // get all the groups of which the logged in user is part of
 router.get("/", verifyToken, async (req, res) => {
