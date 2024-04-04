@@ -92,7 +92,11 @@ router.post("/login", async (req, res) => {
 // route to logout
 router.post("/logout", async (req, res) => {
 	try {
-		res.cookie("token", "1");
+		res.cookie("token", "1", {
+			sameSite: 'None',
+			secure: true,
+			httpOnly: true 
+		});
 		res.status(200).json({ msg: "logout successful" });
 	} catch (err) {
 		res.status(200).json({ msg: "No token present" });
