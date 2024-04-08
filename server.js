@@ -9,7 +9,7 @@ import expenseRoutes from "./src/routes/expenseRoute.js";
 import updateRouter from "./src/routes/updateRoute.js";
 import cookieParser from "cookie-parser";
 const app = express();
-app.use(cors({ origin: "https://easy-split-client.vercel.app", credentials: true }));
+app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -23,7 +23,7 @@ mongoose
 	.connect(process.env.DBURI)
 	.then(() => {
 		console.log("Database connected");
-		app.listen(process.env.PORT, () => {
+		app.listen(5000, () => {
 			console.log("server is live : http://localhost:5000");
 		});
 	})
