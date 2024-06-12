@@ -11,10 +11,14 @@ router.get("/search/:usernameOrEmail", verifyToken, async (req, res) => {
 	})
 		.select("-password")
 		.then((result) => {
-			res.json(result);
+			console.log(result);
+			if (result === null)
+				return res.status(404).json({ message: "user not found" });
+			return res.json({ message: "user found", data: result });
 		})
-		.catch((err) => {
-			res.json({ error: err });
+		.catch((error) => {
+			console.log("unable to search user", error);
+			return res.status(500).json({ message: "some error occurred" });
 		});
 });
 // serach for a user based no objectId

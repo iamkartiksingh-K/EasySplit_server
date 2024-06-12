@@ -53,8 +53,8 @@ router.post("/", verifyToken, async (req, res) => {
 			result.save();
 			res.json({ msg: "Expense Saved", data: expense });
 		});
-	} catch (err) {
-		res.json({ error: err });
+	} catch (error) {
+		res.status(500).json({ message: "Unable to save expense" });
 	}
 });
 // // get specific expense
@@ -74,10 +74,11 @@ router.get("/:groupId/getAllExpenses", verifyToken, async (req, res) => {
 	const groupId = req.params.groupId;
 	Expense.find({ "group.groupId": groupId })
 		.then((result) => {
-			res.json(result);
+			res.json({ data: result });
 		})
-		.catch((err) => {
-			res.json({ error: err });
+		.catch((error) => {
+			console.log("Unable to retrieve expenses", error);
+			res.status(500).json({ message: "Unable to retrieve expenses" });
 		});
 });
 

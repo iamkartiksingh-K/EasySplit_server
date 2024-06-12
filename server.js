@@ -6,7 +6,6 @@ import authRouter from "./src/routes/auth.js";
 import userRoutes from "./src/routes/userRoutes.js";
 import groupRoutes from "./src/routes/groupRoutes.js";
 import expenseRoutes from "./src/routes/expenseRoute.js";
-import updateRouter from "./src/routes/updateRoute.js";
 import cookieParser from "cookie-parser";
 const app = express();
 app.use(cors({ origin: "http://localhost:5173", credentials: true }));
@@ -17,7 +16,6 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", userRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/expenses", expenseRoutes);
-app.use("/api/updates", updateRouter);
 
 mongoose
 	.connect(process.env.DBURI)
