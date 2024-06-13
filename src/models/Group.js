@@ -27,6 +27,10 @@ const groupSchema = mongoose.Schema({
 				ref: "User",
 				required: true,
 			},
+			username: {
+				type: String,
+				required: true,
+			},
 			youOwe: {
 				type: Number,
 				default: 0,

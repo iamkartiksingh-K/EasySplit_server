@@ -13,7 +13,12 @@ router.post("/", verifyToken, async (req, res) => {
 		return res.status(400).json({ message: "Group name cannot be empty" });
 	members.push({ userId: req.user.id, username: req.user.username });
 	const balances = members.map((member) => {
-		return { userId: member.userId, youOwe: 0, youAreOwed: 0 };
+		return {
+			userId: member.userId,
+			username: member.username,
+			youOwe: 0,
+			youAreOwed: 0,
+		};
 	});
 	const newGroup = new Group({
 		name,
@@ -70,9 +75,15 @@ router.put("/:groupId", verifyToken, async (req, res) => {
 		updateObject.name = groupName;
 	}
 	try {
-		const result = await Group.findByIdAndUpdate(id, {
-			$set: updateObject,
-		});
+		console.log("update object:", updateObject);
+		const result = await Group.findOneAndUpdate(
+			{ _id: id },
+			{
+				$set: updateObject,
+			},
+			{ new: true }
+		);
+		console.log(result);
 		res.json({ message: "group updated", data: result });
 	} catch (error) {
 		res.status(500).json({ message: "Unable to update group" });
@@ -126,11 +137,16 @@ router.post("/:groupId/members", verifyToken, async (req, res) => {
 				.json({ message: "user already in the group" });
 
 		group.members.push({ userId: user._id, username });
-		group.balances.push({
-			userId: user._id,
-			youOwe: 0,
-			youAreOwed: 0,
-		});
+		if (
+			group.balances.find((balance) => balance.username === username) ===
+			undefined
+		)
+			group.balances.push({
+				userId: user._id,
+				username: username,
+				youOwe: 0,
+				youAreOwed: 0,
+			});
 		await group.save();
 		return res.json({
 			message: "member added",
@@ -160,6 +176,33 @@ router.post("/:groupId/removeMember", verifyToken, async (req, res) => {
 		res.status(500).json({ message: "something went wrong" });
 	}
 });
+// route to leave group
+router.post("/:groupId/leave", verifyToken, async (req, res) => {
+	const userToRemove = req.user.id;
+	try {
+		const group = await Group.findById(req.params.groupId);
+		const newMembers = group.members.filter(
+			(member) => !member.userId.equals(userToRemove)
+		);
+		if (newMembers.length === 0) {
+			await Expense.deleteMany({ "group.groupId": req.params.groupId });
+			await Group.deleteOne({ _id: req.params.groupId });
+			return res.json({
+				message: "Group removed as there are no members left",
+			});
+		}
+		if (group.admin.equals(userToRemove)) {
+			const index = Math.floor(Math.random() * newMembers.length);
+			group.admin = newMembers[index].userId;
+		}
+		group.members = newMembers;
+		await group.save();
+		res.json({ message: "You left the group", data: group });
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({ message: "something went wrong" });
+	}
+});
 // route to get transactions to make to settle expenses
 router.get("/:groupId/getMinTransactions", verifyToken, async (req, res) => {
 	const groupId = req.params.groupId;
@@ -169,17 +212,18 @@ router.get("/:groupId/getMinTransactions", verifyToken, async (req, res) => {
 				return res.status(404).json({ error: "group not found" });
 			const amount = result.balances.map((balance) => {
 				return {
-					userId: balance.userId,
+					username: balance.username,
 					balance: balance.youAreOwed - balance.youOwe,
 				};
 			});
-			// console.log(amount);
+			console.log(amount);
 			const transactions = [];
 			minTransaction(amount, transactions);
 			res.json({ data: transactions });
 		})
-		.catch((err) => {
-			res.status(500).json({ err: err });
+		.catch((error) => {
+			console.log(error);
+			res.status(500).json({ message: "Some error occurred" });
 		});
 });
 // route to settle debt
@@ -189,7 +233,7 @@ router.post("/:groupId/settle", verifyToken, async (req, res) => {
 	try {
 		const group = await Group.findById(groupId);
 		group.balances = group.balances.map((balance) => {
-			if (balance.userId.equals(from)) {
+			if (balance.username === from) {
 				const tempBalance = balance.youOwe - amount;
 				if (tempBalance === balance.youAreOwed) {
 					return {
@@ -203,7 +247,7 @@ router.post("/:groupId/settle", verifyToken, async (req, res) => {
 					youOwe: tempBalance,
 				};
 			}
-			if (balance.userId.equals(to)) {
+			if (balance.username === to) {
 				const tempBalance = balance.youAreOwed - amount;
 				if (tempBalance === balance.youOwe) {
 					return {
@@ -220,7 +264,7 @@ router.post("/:groupId/settle", verifyToken, async (req, res) => {
 			return balance;
 		});
 		await group.save();
-		res.json({ data: group });
+		res.json({ message: "settled!", data: group });
 	} catch (error) {
 		res.json({ message: "unable to settle debt" });
 	}
