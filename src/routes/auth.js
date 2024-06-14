@@ -33,7 +33,7 @@ router.post("/register", async (req, res) => {
 
 		await user.save();
 		const token = jwt.sign(
-			{ id: user._id, username: user.username, fullName: user.fullName },
+			{ id: user._id, username: user.username },
 			process.env.ACCESS_TOKEN_SECRET,
 			{
 				expiresIn: "3h",
@@ -48,7 +48,11 @@ router.post("/register", async (req, res) => {
 
 		return res
 			.status(200)
-			.json({ message: "User registered Successfully" });
+			.json({
+				message: "User registered Successfully",
+				id: user._id,
+				username: user.username,
+			});
 	} catch (error) {
 		console.log("Registeration failed", error);
 		return res.status(400).json({ message: "Registration failed" });
@@ -89,7 +93,11 @@ router.post("/login", async (req, res) => {
 			httpOnly: true,
 		});
 		console.log(user);
-		res.json({ message: "Login Successful", _id: user._id });
+		res.json({
+			message: "Login Successful",
+			id: user._id,
+			username: user.username,
+		});
 	} catch (err) {
 		res.status(500).json({ message: "Login failed" });
 	}
@@ -114,13 +122,15 @@ router.get("/check", async (req, res) => {
 
 	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded) => {
 		if (error) {
-			return res.status(404).json({ error: "Token expired" });
+			return res.status(404).json({ message: "Token expired" });
 		}
 		const decodedId = decoded.id;
 		User.findById(decodedId)
 			.then((user) => {
 				if (!user)
-					return res.status(404).json({ error: "Invalid Token" });
+					return res
+						.status(404)
+						.json({ MessageEvent: "Invalid Token" });
 				res.json({
 					authenticated: true,
 					user: {
