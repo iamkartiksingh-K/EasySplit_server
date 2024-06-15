@@ -9,7 +9,7 @@ import expenseRoutes from "./src/routes/expenseRoute.js";
 import cookieParser from "cookie-parser";
 const app = express();
 app.use(
-	cors({ origin: "https://easy-split-client.vercel.app/", credentials: true })
+	cors({ origin: "https://easy-split-client.vercel.app", credentials: true })
 );
 app.use(express.json());
 app.use(cookieParser());
