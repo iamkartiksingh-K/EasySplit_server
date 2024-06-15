@@ -29,32 +29,29 @@ router.post("/", verifyToken, async (req, res) => {
 			split,
 		});
 		await expense.save();
-		Group.findById(group.groupId).then((result) => {
-			const updatedBalance = result.balances.map((balance) => {
-				if (balance.userId.equals(paidBy.userId)) {
-					return {
-						...balance,
-						youAreOwed:
-							balance.youAreOwed +
-							amount -
-							split.find((s) => s.userId === paidBy.userId)
-								.amount,
-					};
-				}
+		const result = await Group.findById(group.groupId);
+		const updatedBalance = result.balances.map((balance) => {
+			if (balance.userId.equals(paidBy.userId)) {
 				return {
 					...balance,
-					youOwe:
-						balance.youOwe +
-						split.find((s) => balance.userId.equals(s.userId))
-							.amount,
+					youAreOwed:
+						balance.youAreOwed +
+						amount -
+						split.find((s) => s.userId === paidBy.userId)?.amount,
 				};
-			});
-			result.balances = updatedBalance;
-			result.save();
-			res.json({ msg: "Expense Saved", data: expense });
+			}
+			return {
+				...balance,
+				youOwe:
+					balance.youOwe +
+					split.find((s) => balance.userId.equals(s.userId))?.amount,
+			};
 		});
-	} catch (err) {
-		res.json({ error: err });
+		result.balances = updatedBalance;
+		await result.save();
+		res.json({ msg: "Expense Saved", data: expense });
+	} catch (error) {
+		res.status(500).json({ message: "Unable to save expense" });
 	}
 });
 // // get specific expense
@@ -74,10 +71,11 @@ router.get("/:groupId/getAllExpenses", verifyToken, async (req, res) => {
 	const groupId = req.params.groupId;
 	Expense.find({ "group.groupId": groupId })
 		.then((result) => {
-			res.json(result);
+			res.json({ data: result });
 		})
-		.catch((err) => {
-			res.json({ error: err });
+		.catch((error) => {
+			console.log("Unable to retrieve expenses", error);
+			res.status(500).json({ message: "Unable to retrieve expenses" });
 		});
 });
 

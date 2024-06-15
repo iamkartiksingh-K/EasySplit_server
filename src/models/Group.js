@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 const groupSchema = mongoose.Schema({
 	name: { type: String, required: true, trim: true },
 	cover: { type: String },
+	admin: {
+		type: mongoose.Schema.Types.ObjectId,
+		ref: "User",
+		required: true,
+	},
 	members: [
 		{
 			userId: {
@@ -20,6 +25,10 @@ const groupSchema = mongoose.Schema({
 			userId: {
 				type: mongoose.Schema.Types.ObjectId,
 				ref: "User",
+				required: true,
+			},
+			username: {
+				type: String,
 				required: true,
 			},
 			youOwe: {

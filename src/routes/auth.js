@@ -7,20 +7,20 @@ const router = express.Router();
 
 /*
 It takes username, email and password from the req object then
-it hashes the password and saves, username, hasedPassword and email in
+it hashes the password and saves, username, hashedPassword and email in
 database.
 */
 router.post("/register", async (req, res) => {
 	const { username, email, password, fullName } = req.body;
 
 	if (!username || !email || !password || !fullName) {
-		return res.status(400).json({ error: "some fields are empty" });
+		return res.status(400).json({ message: "some fields are empty" });
 	}
 
 	try {
 		const existingUser = await User.findOne({ username: username });
 		if (existingUser) {
-			return res.status(400).json({ error: "user already exists" });
+			return res.status(400).json({ message: "user already exists" });
 		}
 		const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -44,11 +44,18 @@ router.post("/register", async (req, res) => {
 			secure: true,
 			httpOnly: true,
 		});
+		console.log();
+
 		return res
 			.status(200)
-			.json({ message: "User registered Successfully" });
-	} catch (err) {
-		return res.status(400).json({ error: "Registration failed" });
+			.json({
+				message: "User registered Successfully",
+				id: user._id,
+				username: user.username,
+			});
+	} catch (error) {
+		console.log("Registeration failed", error);
+		return res.status(400).json({ message: "Registration failed" });
 	}
 });
 
@@ -63,20 +70,21 @@ router.post("/login", async (req, res) => {
 	try {
 		const { username, password } = req.body;
 		if (!username || !password)
-			return res.status(400).json({ error: "Some fields are empty" });
+			return res.status(400).json({ message: "Some fields are empty" });
+
 		const user = await User.findOne({ username: username });
 		if (!user) {
-			return res.status(400).json({ error: "User doesn't exists" });
+			return res.status(400).json({ message: "User doesn't exists" });
 		}
 		const passwordMatch = await bcrypt.compare(password, user.password);
 		if (!passwordMatch) {
-			return res.status(400).json({ error: "Wrong Password" });
+			return res.status(400).json({ message: "Wrong Password" });
 		}
 		const token = jwt.sign(
 			{ id: user._id, username: user.username },
 			process.env.ACCESS_TOKEN_SECRET,
 			{
-				expiresIn: "3h",
+				expiresIn: "6h",
 			}
 		);
 		res.cookie("token", token, {
@@ -84,9 +92,14 @@ router.post("/login", async (req, res) => {
 			secure: true,
 			httpOnly: true,
 		});
-		res.json({ msg: "Login Successful", _id: user._id });
+		console.log(user);
+		res.json({
+			message: "Login Successful",
+			id: user._id,
+			username: user.username,
+		});
 	} catch (err) {
-		res.status(500).json({ error: "Login failed" });
+		res.status(500).json({ message: "Login failed" });
 	}
 });
 // route to logout
@@ -109,13 +122,15 @@ router.get("/check", async (req, res) => {
 
 	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, decoded) => {
 		if (error) {
-			return res.status(404).json({ error: "Token expired" });
+			return res.status(404).json({ message: "Token expired" });
 		}
 		const decodedId = decoded.id;
 		User.findById(decodedId)
 			.then((user) => {
 				if (!user)
-					return res.status(404).json({ error: "Invalid Token" });
+					return res
+						.status(404)
+						.json({ MessageEvent: "Invalid Token" });
 				res.json({
 					authenticated: true,
 					user: {
@@ -125,7 +140,7 @@ router.get("/check", async (req, res) => {
 				});
 			})
 			.catch((err) => {
-				res.status(500).json({ error: "some error" });
+				res.status(500).json({ error: "error" });
 			});
 	});
 });

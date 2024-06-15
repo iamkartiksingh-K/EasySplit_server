@@ -15,7 +15,7 @@ function getMin(amounts) {
 function minimum(val1, val2) {
 	return val1 < val2 ? val1 : val2;
 }
-// amounts[i]=[{balance:number, userId:string}]
+// amounts[i]=[{balance:number, username:string}]
 function minTransaction(amounts, transactions) {
 	let maxCredit = getMax(amounts);
 	let maxDebit = getMin(amounts);
@@ -25,13 +25,13 @@ function minTransaction(amounts, transactions) {
 	}
 	let minAmount = minimum(
 		amounts[maxCredit].balance,
-		-amounts[maxDebit].balance
+		Math.abs(amounts[maxDebit].balance)
 	);
 	amounts[maxCredit].balance -= minAmount;
 	amounts[maxDebit].balance += minAmount;
 	transactions.push({
-		from: amounts[maxDebit].userId,
-		to: amounts[maxCredit].userId,
+		from: amounts[maxDebit].username,
+		to: amounts[maxCredit].username,
 		amount: minAmount,
 	});
 	minTransaction(amounts, transactions);
