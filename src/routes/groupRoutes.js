@@ -37,17 +37,29 @@ router.post("/", verifyToken, async (req, res) => {
 });
 // get all the groups of which the logged in user is part of
 router.get("/", verifyToken, async (req, res) => {
-	Group.find({ "members.userId": req.user.id })
-		.then((groups) => {
-			res.json({
-				message: "groups retrieved successfully",
-				data: groups,
-			});
-		})
-		.catch((error) => {
-			console.log(error);
-			res.status(500).json({ message: "Unable to retrieve groups" });
+	try {
+		const groups = await Group.find({ "members.userId": req.user.id });
+		const processdGroups = groups.map(
+			({ cover, _id, name, members, balances }) => {
+				return {
+					cover,
+					_id,
+					name,
+					memberCount: members.length,
+					balance: balances.find((balance) =>
+						balance.userId.equals(req.user.id)
+					),
+				};
+			}
+		);
+		res.json({
+			message: "groups retrieved successfully",
+			data: processdGroups,
 		});
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({ message: "Unable to retrieve groups" });
+	}
 });
 // get a specific group
 router.get("/:groupId", verifyToken, async (req, res) => {
