@@ -37,21 +37,24 @@ router.post("/", verifyToken, async (req, res) => {
 					...balance,
 					youAreOwed:
 						balance.youAreOwed +
-						amount -
-						split.find((s) => s.userId === paidBy.userId)?.amount,
+							amount -
+							split.find((s) => s.userId === paidBy.userId)
+								?.amount || 0,
 				};
 			}
 			return {
 				...balance,
 				youOwe:
 					balance.youOwe +
-					split.find((s) => balance.userId.equals(s.userId))?.amount,
+						split.find((s) => balance.userId.equals(s.userId))
+							?.amount || 0,
 			};
 		});
 		result.balances = updatedBalance;
 		await result.save();
 		res.json({ msg: "Expense Saved", data: expense });
 	} catch (error) {
+		console.log(error);
 		res.status(500).json({ message: "Unable to save expense" });
 	}
 });
