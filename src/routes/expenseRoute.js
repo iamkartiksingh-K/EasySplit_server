@@ -9,10 +9,11 @@ router.get("/", verifyToken, async (req, res) => {
 	const userId = req.user.id;
 	Expense.find({ "split.userId": userId })
 		.then((result) => {
-			res.json(result);
+			res.json({ data: result });
 		})
-		.catch((err) => {
-			res.json({ error: err });
+		.catch((error) => {
+			console.log(error);
+			res.json({ message: "some error occurred" });
 		});
 });
 // create an expense
