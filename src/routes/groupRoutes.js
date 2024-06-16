@@ -29,7 +29,16 @@ router.post("/", verifyToken, async (req, res) => {
 	});
 	try {
 		await newGroup.save();
-		res.json({ message: "Group added", data: newGroup });
+		const data = {
+			cover: newGroup.cover,
+			_id: newGroup._id,
+			name: newGroup.name,
+			memberCount: newGroup.members.length,
+			balance: newGroup.balances.find((balance) =>
+				balance.userId.equals(req.user.id)
+			),
+		};
+		res.json({ message: "Group added", data: data });
 	} catch (error) {
 		console.log(error);
 		res.status(400).json({ message: "Unable to save group" });
