@@ -58,17 +58,43 @@ router.post("/", verifyToken, async (req, res) => {
 		res.status(500).json({ message: "Unable to save expense" });
 	}
 });
-// // get specific expense
-// router.get("/:expenseId", verifyToken, async (req, res) => {
-// 	const expenseId = req.params.expenseId;
-// 	Expense.find({ _id: expenseId })
-// 		.then((result) => {
-// 			res.json(result);
-// 		})
-// 		.catch((err) => {
-// 			res.json({ error: err });
-// 		});
-// });
+
+// delete an expense
+router.delete("/:groupId/:id", verifyToken, async (req, res) => {
+	try {
+		console.log("hii")
+		const {groupId, id} = req.params;
+		console.log(id)
+		const result = await Group.findById(groupId);
+		const {split, paidBy, amount} = await Expense.findById(id);
+		// console.log(expense);
+		const updatedBalance = result.balances.map((balance) => {
+			if (balance.userId.equals(paidBy.userId)) {
+				return {
+					...balance,
+					youAreOwed:
+						balance.youAreOwed -(
+							amount -
+							split.find((s) => s.userId.equals(paidBy.userId))
+								?.amount || 0),
+				};
+			}
+			return {
+				...balance,
+				youOwe:
+					balance.youOwe -
+						split.find((s) => balance.userId.equals(s.userId))
+							?.amount || 0,
+			};
+		});
+		result.balances = updatedBalance;
+		await result.save();
+		res.json({ msg: "Expense deleted" });
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({ message: "Unable to delete expense" });
+	}
+});
 
 // get all expenses realted to group
 router.get("/:groupId/getAllExpenses", verifyToken, async (req, res) => {
