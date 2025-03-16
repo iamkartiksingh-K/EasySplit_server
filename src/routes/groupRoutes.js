@@ -222,27 +222,35 @@ router.post("/:groupId/leave", verifyToken, async (req, res) => {
 });
 // route to get transactions to make to settle expenses
 router.get("/:groupId/getMinTransactions", verifyToken, async (req, res) => {
-  const groupId = req.params.groupId;
-  Group.findById(groupId)
-    .then((result) => {
-      if (!result) return res.status(404).json({ error: "group not found" });
-      const amount = result.balances.map((balance) => {
-        return {
-          username: balance.username,
-          balance: balance.youAreOwed - balance.youOwe,
-        };
-      });
-      const nonZeroBalance = amount.filter((user) => user.balance !== 0);
-      console.log(nonZeroBalance);
-      const transactions = [];
-      minTransaction(nonZeroBalance, transactions);
-      res.json({ data: transactions });
-    })
-    .catch((error) => {
-      console.log(error);
-      res.status(500).json({ message: "Some error occurred" });
-    });
+  try {
+    const groupId = req.params.groupId;
+    const result = await Group.findById(groupId);
+
+    if (!result) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const amount = result.balances.map((balance) => ({
+      username: balance.username,
+      balance: balance.youAreOwed - balance.youOwe,
+    }));
+
+    const nonZeroBalance = amount.filter((user) => user.balance !== 0);
+
+    if (nonZeroBalance.length === 0) {
+      return res.json({ data: [] }); // No transactions needed
+    }
+
+    const transactions = [];
+    minTransaction(nonZeroBalance, transactions);
+
+    res.json({ data: transactions });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Some error occurred" });
+  }
 });
+
 // route to settle debt
 router.post("/:groupId/settle", verifyToken, async (req, res) => {
   const { from, to, amount } = req.body;
